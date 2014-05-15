@@ -7,7 +7,7 @@ python:
   - pypy
 install:
   - cd ../
-  - git clone -b plugguable_render_filename https://github.com/jpcw/mr.bobby.git
+  - git clone https://github.com/jpcw/mr.bobby.git
   - cd mr.bobby
   - python setup.py install
   - cd ../bobbyplugins.jpcw/
