@@ -68,9 +68,9 @@ setup(name='bobbyplugins.jpcw',
       entry_points="""
       # -*- Entry points: -*-
       [mr.bobby.render_filename]
-#      if_a_and_b_stmt=bobbyplugins.jpcw.rendering:If_A_and_B_Statement
-#      if_a_or_b_stmt=bobbyplugins.jpcw.rendering:If_A_or_B_Statement
-#      if_not_stmt=bobbyplugins.jpcw.rendering:If_Not_Statement
+      if_a_and_b_stmt=bobbyplugins.jpcw.rendering:If_A_and_B_Statement
+      if_a_or_b_stmt=bobbyplugins.jpcw.rendering:If_A_or_B_Statement
+      if_not_stmt=bobbyplugins.jpcw.rendering:If_Not_Statement
       if_stmt=bobbyplugins.jpcw.rendering:If_Statement
       """,
       )
