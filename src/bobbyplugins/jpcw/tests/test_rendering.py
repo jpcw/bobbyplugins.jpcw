@@ -8,14 +8,21 @@ import unittest
 
 import mock
 
+from bobbyplugins.jpcw.rendering import (If_A_and_B_Statement,
+                                         If_A_or_B_Statement,
+                                         If_Not_Statement,
+                                         If_Statement)
+
+eps = [If_A_and_B_Statement, If_A_or_B_Statement, If_Not_Statement,
+       If_Statement]
+
 
 class render_structureTest(unittest.TestCase):
 
     def setUp(self):
         import bobbyplugins.jpcw
         import mrbobby.plugins
-        plugins = mrbobby.plugins.load_plugin('render_filename')
-        mrbobby.plugins.PLUGINS['render_filename'] = plugins
+        mrbobby.plugins.PLUGINS['mr.bobby.render_filename'] = eps
         self.fs_tempdir = mkdtemp()
         self.fs_templates = os.path.abspath(
             os.path.join(os.path.dirname(bobbyplugins.jpcw.__file__),
@@ -46,6 +53,7 @@ class render_structureTest(unittest.TestCase):
 
     def test_subdirectories_created(self):
         from mrbobby.rendering import python_formatting_renderer
+
         self.call_FUT(os.path.join(self.fs_templates, 'unbound'),
                       {'ip_addr': '192.168.0.1',
                        'access_control': '10.0.1.0/16 allow',
@@ -162,7 +170,7 @@ class render_templateTest(unittest.TestCase):
     def setUp(self):
         import bobbyplugins.jpcw
         import mrbobby.plugins
-        mrbobby.plugins.load_plugin('render_filename')
+        mrbobby.plugins.PLUGINS['mr.bobby.render_filename'] = eps
         self.fs_tempdir = mkdtemp()
         dirname = os.path.dirname(bobbyplugins.jpcw.__file__)
         self.fs_templates = os.path.abspath(os.path.join(dirname, 'tests',
@@ -210,6 +218,118 @@ class render_templateTest(unittest.TestCase):
         self.call_FUT(fs_source, {'rdr.me': 'y', 'author.name': 'bobby'},)
         self.assertTrue(os.path.exists('%s/%s' % (self.fs_tempdir,
                                        'bobby_endpoint.py')))
+
+    def test_render_not_statement_template(self):
+        """if the source is not a template, it is copied."""
+        fnm = 'renamedtemplate3/+author.name+'\
+              '+__if_not_rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.call_FUT(fs_source, {'rdr.me': 'n', 'author.name': 'bobby'},)
+        self.assertTrue(os.path.exists('%s/%s' % (self.fs_tempdir,
+                                       'bobby_endpoint.py')))
+
+    def test_render_not_statement_template_with_true_value(self):
+        """if the source is not a template, it is copied."""
+        fnm = 'renamedtemplate3/+author.name+'\
+              '+__if_not_rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.call_FUT(fs_source, {'rdr.me': 'y', 'author.name': 'bobby'},)
+        self.assertFalse(os.path.exists('%s/%s' % (self.fs_tempdir,
+                                        'bobby_endpoint.py')))
+
+    def test_render_not_statement_template_raise_unknown_var(self):
+        """if the source is not a template, it is copied."""
+        fnm = 'renamedtemplate3/+author.name+'\
+              '+__if_not_rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.assertRaises(KeyError, self.call_FUT, fs_source,
+                          {'a-rdr.me': 'y', 'c-rdr.me': 'y'})
+
+    def test_render_if_A_or_B_statement_template_A_is_True(self):
+        """if A or B statement."""
+        fnm = 'if_a_or_b/+author.name+'\
+              '+__if_a-rdr.me_or_b-rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.call_FUT(fs_source, {'a-rdr.me': 'y', 'b-rdr.me': 'n',
+                                  'author.name': 'bobby'},)
+        self.assertTrue(os.path.exists('%s/%s' % (self.fs_tempdir,
+                                       'bobby_endpoint.py')))
+
+    def test_render_if_A_or_B_statement_template_B_is_True(self):
+        """if A or B statement."""
+        fnm = 'if_a_or_b/+author.name+'\
+              '+__if_a-rdr.me_or_b-rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.call_FUT(fs_source, {'a-rdr.me': 'n', 'b-rdr.me': 'y',
+                                  'author.name': 'bobby'},)
+        self.assertTrue(os.path.exists('%s/%s' % (self.fs_tempdir,
+                                       'bobby_endpoint.py')))
+
+    def test_render_if_A_or_B_statement_template_A_anb_B_are_False(self):
+        """if A or B statement."""
+        fnm = 'if_a_or_b/+author.name+'\
+              '+__if_a-rdr.me_or_b-rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.call_FUT(fs_source, {'a-rdr.me': 'n', 'b-rdr.me': 'n',
+                                  'author.name': 'bobby'},)
+        self.assertFalse(os.path.exists('%s/%s' % (self.fs_tempdir,
+                                        'bobby_endpoint.py')))
+
+    def test_render_if_A_or_B_statement_template_A_anb_C_are_True(self):
+        """if A or B statement."""
+        fnm = 'if_a_or_b/+author.name+'\
+              '+__if_a-rdr.me_or_b-rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.assertRaises(KeyError, self.call_FUT, fs_source,
+                          {'a-rdr.me': 'y', 'c-rdr.me': 'y'})
+
+    def test_render_if_A_and_B_statement_template_A_is_True(self):
+        """if A and B statement."""
+        fnm = 'if_a_and_b/+author.name+'\
+              '+__if_a-rdr.me_and_b-rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.call_FUT(fs_source, {'a-rdr.me': 'y', 'b-rdr.me': 'n',
+                                  'author.name': 'bobby'},)
+        self.assertFalse(os.path.exists('%s/%s' % (self.fs_tempdir,
+                                        'bobby_endpoint.py')))
+
+    def test_render_if_A_and_B_statement_template_B_is_True(self):
+        """if A and B statement."""
+        fnm = 'if_a_and_b/+author.name+'\
+              '+__if_a-rdr.me_and_b-rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.call_FUT(fs_source, {'a-rdr.me': 'n', 'b-rdr.me': 'y',
+                                  'author.name': 'bobby'},)
+        self.assertFalse(os.path.exists('%s/%s' % (self.fs_tempdir,
+                                        'bobby_endpoint.py')))
+
+    def test_render_if_A_and_B_statement_template_A_anb_B_are_False(self):
+        """if A and B statement."""
+        fnm = 'if_a_and_b/+author.name+'\
+              '+__if_a-rdr.me_and_b-rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.call_FUT(fs_source, {'a-rdr.me': 'n', 'b-rdr.me': 'n',
+                                  'author.name': 'bobby'},)
+        self.assertFalse(os.path.exists('%s/%s' % (self.fs_tempdir,
+                                        'bobby_endpoint.py')))
+
+    def test_render_if_A_and_B_statement_template_A_anb_B_are_True(self):
+        """if A and B statement."""
+        fnm = 'if_a_and_b/+author.name+'\
+              '+__if_a-rdr.me_and_b-rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.call_FUT(fs_source, {'a-rdr.me': 'y', 'b-rdr.me': 'y',
+                                  'author.name': 'bobby'},)
+        self.assertTrue(os.path.exists('%s/%s' % (self.fs_tempdir,
+                                       'bobby_endpoint.py')))
+
+    def test_render_if_A_and_B_statement_template_A_anb_C_are_True(self):
+        """if A and B statement."""
+        fnm = 'if_a_and_b/+author.name+'\
+              '+__if_a-rdr.me_and_b-rdr.me__+_endpoint.py.bobby'
+        fs_source = os.path.join(self.fs_templates, fnm)
+        self.assertRaises(KeyError, self.call_FUT, fs_source,
+                          {'a-rdr.me': 'y', 'c-rdr.me': 'y'})
 
     def test_render_false_statement_template_is_None(self):
         """if the source is not a template, it is copied."""

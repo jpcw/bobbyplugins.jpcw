@@ -10,7 +10,7 @@ import re
 
 
 class Plugin():
-    """If A and B Statement."""
+    """Base Ckass Plugin."""
     order = 10
 
     def __init__(self, filename, variables, will_continue=True):
@@ -19,7 +19,7 @@ class Plugin():
         self.will_continue = will_continue
 
     def get_filename(self):
-        pass
+        raise NotImplementedError  # pragma nocover
 
 
 class If_A_and_B_Statement(Plugin):
@@ -96,7 +96,7 @@ class If_Not_Statement(Plugin):
         statement = statement_regex.search(self.filename)
 
         if statement:
-            var = statement.group()[6:-3]
+            var = statement.group()[10:-3]
             if var in self.variables:
                 # be sure we have booelan string response
                 if str(self.variables[var]).lower() in ['n', 'no',
